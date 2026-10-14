@@ -13,35 +13,26 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '17'
           distribution: 'temurin'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-disabled: true # Tetap dimatikan sementara karena server cache GitHub sedang gangguan
+
+      - name: Generate Gradle Wrapper
+        shell: bash
+        run: |
+          # Perintah ini akan mengunduh dan membuat file gradlew secara otomatis di server
+          gradle wrapper --gradle-version 8.5
 
       - name: Build Debug APK
         shell: bash
         run: |
-          set -euo pipefail
-
-          BUILD_FILE=$(find . -maxdepth 4 -type f \( -name "settings.gradle*" -o -name "build.gradle*" \) | head -n 1)
-
-          if [ -z "$BUILD_FILE" ]; then
-            echo "Tidak ditemukan file build.gradle atau settings.gradle!"
-            exit 1
-          fi
-
-          PROJECT_DIR=$(dirname "$BUILD_FILE")
-          echo "Folder proyek ditemukan di: $PROJECT_DIR"
-          cd "$PROJECT_DIR"
-
-          if [ ! -f "./gradlew" ]; then
-            echo "gradlew tidak ditemukan. Membuat wrapper baru otomatis..."
-            gradle wrapper
-          fi
-
+          # Berikan izin akses dan jalankan build
           chmod +x ./gradlew
           ./gradlew assembleDebug
 
