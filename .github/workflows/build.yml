@@ -21,37 +21,32 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          cache-disabled: true # Tetap dimatikan sementara karena server cache GitHub sedang gangguan
+          cache-disabled: true # Tetap dimatikan karena gangguan cache GitHub
 
       - name: Build Debug APK
         shell: bash
         run: |
           set -euo pipefail
 
-          # 1. Cari file build Android untuk menentukan folder proyek
+          # 1. Cari file settings.gradle untuk menentukan root proyek
           BUILD_FILE=$(find . -maxdepth 4 -type f \( -name "settings.gradle*" -o -name "build.gradle*" \) | head -n 1)
 
           if [ -z "$BUILD_FILE" ]; then
-            echo "Tidak ditemukan file build.gradle atau settings.gradle di folder mana pun!"
+            echo "Tidak ditemukan file build.gradle atau settings.gradle!"
             exit 1
           fi
 
           PROJECT_DIR=$(dirname "$BUILD_FILE")
           echo "Folder proyek ditemukan di: $PROJECT_DIR"
-          
-          # 2. Masuk ke folder proyek tersebut
           cd "$PROJECT_DIR"
 
-          # 3. Buat wrapper baru karena tidak ada di Git
-          echo "Membuat wrapper baru otomatis..."
-          gradle wrapper --gradle-version 8.5
+          # 2. PERBAIKAN: Gunakan perintah init/wrapper bawaan tanpa merusak repositori lokal
+          if [ ! -f "./gradlew" ]; then
+            echo "Membuat wrapper baru secara lokal menggunakan task bawaan..."
+            gradle wrapper --type-migration
+          fi
 
-          # 4. Berikan izin akses dan jalankan kompilasi APK
           chmod +x ./gradlew
-          ./gradlew assembleDebug
-
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: gemini-llama-app
-          path: '**/app/build/outputs/apk/debug/*.apk'
+          
+          # 3. Jalankan build dengan memaksa pembaruan dependensi & plugin
+          ./gradlew assembleDebug --refresh-dependencies
