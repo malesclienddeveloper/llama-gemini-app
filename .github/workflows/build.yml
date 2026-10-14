@@ -23,16 +23,30 @@ jobs:
         with:
           cache-disabled: true # Tetap dimatikan sementara karena server cache GitHub sedang gangguan
 
-      - name: Generate Gradle Wrapper
-        shell: bash
-        run: |
-          # Perintah ini akan mengunduh dan membuat file gradlew secara otomatis di server
-          gradle wrapper --gradle-version 8.5
-
       - name: Build Debug APK
         shell: bash
         run: |
-          # Berikan izin akses dan jalankan build
+          set -euo pipefail
+
+          # 1. Cari file build Android untuk menentukan folder proyek
+          BUILD_FILE=$(find . -maxdepth 4 -type f \( -name "settings.gradle*" -o -name "build.gradle*" \) | head -n 1)
+
+          if [ -z "$BUILD_FILE" ]; then
+            echo "Tidak ditemukan file build.gradle atau settings.gradle di folder mana pun!"
+            exit 1
+          fi
+
+          PROJECT_DIR=$(dirname "$BUILD_FILE")
+          echo "Folder proyek ditemukan di: $PROJECT_DIR"
+          
+          # 2. Masuk ke folder proyek tersebut
+          cd "$PROJECT_DIR"
+
+          # 3. Buat wrapper baru karena tidak ada di Git
+          echo "Membuat wrapper baru otomatis..."
+          gradle wrapper --gradle-version 8.5
+
+          # 4. Berikan izin akses dan jalankan kompilasi APK
           chmod +x ./gradlew
           ./gradlew assembleDebug
 
