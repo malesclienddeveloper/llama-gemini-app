@@ -26,19 +26,8 @@ jobs:
         run: |
           set -euo pipefail
 
-          BUILD_FILE=$(find . -maxdepth 4 -type f -name "build.gradle.kts" | head -n 1)
-
-          if [ -z "$BUILD_FILE" ]; then
-            echo "Error: File build.gradle.kts tidak ditemukan!"
-            exit 1
-          fi
-
-          PROJECT_DIR=$(dirname "$BUILD_FILE")
-          echo "Folder proyek ditemukan di: $PROJECT_DIR"
-          cd "$PROJECT_DIR"
-
           if [ ! -f "./gradlew" ]; then
-            echo "Membuat wrapper baru..."
+            echo "Membuat wrapper baru di root..."
             gradle wrapper --gradle-version 8.5
           fi
 
