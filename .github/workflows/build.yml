@@ -3,6 +3,7 @@ name: Build Android APK
 on:
   push:
     branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -20,22 +21,14 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: "8.5"
 
       - name: Build Debug APK
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          if [ ! -f "./gradlew" ]; then
-            echo "Membuat wrapper baru di root..."
-            gradle wrapper --gradle-version 8.5
-          fi
-
-          chmod +x ./gradlew
-          ./gradlew assembleDebug
+        run: gradle assembleDebug --stacktrace
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: gemini-llama-app
-          path: "**/build/outputs/apk/debug/*.apk"
+          path: "app/build/outputs/apk/debug/*.apk"
